@@ -6,8 +6,7 @@ dotenv.config({ path: "./config.env" });
 
 const user = process.env.USER_NAME;
 const password = process.env.PASSWORD;
-// const MONGODB_URI = `mongodb+srv://${user}:${password}@cluster0.mpuz2fw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-console.log(user, password);
+
 const MONGODB_URI = `mongodb+srv://${user}:${password}@cluster0.mpuz2fw.mongodb.net/`;
 
 mongoose
