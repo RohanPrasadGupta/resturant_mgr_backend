@@ -6,7 +6,21 @@ const tableRoutes = require("./routes/tables.js");
 
 const app = express();
 
-app.use(cors({ origin: true, credentials: true }));
+const allowedOrigins = [
+  "http://localhost:3002",
+  "http://localhost:3000",
+  "https://rpg-ecommerce.netlify.app",
+  "https://resturant-mgr-backend.onrender.com",
+];
+
+const corsOptions = {
+  origin: allowedOrigins,
+  methods: "GET, POST, PUT, DELETE, PATCH, HEAD",
+  credentials: true,
+  allowedHeaders: "Content-Type, Authorization",
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use("/api/menu", menuRoutes);
