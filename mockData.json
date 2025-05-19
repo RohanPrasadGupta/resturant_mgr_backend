@@ -1,0 +1,220 @@
+ [
+  
+  {
+    name: 'Garden Fresh Salad',
+    description: 'A refreshing mix of seasonal vegetables with house-made vinaigrette',
+    price: 120,
+    category: 'vegetarian',
+    image: 'https://images.pexels.com/photos/1059905/pexels-photo-1059905.jpeg'
+  },
+  {
+    name: 'Paneer Tikka Masala',
+    description: 'Grilled cottage cheese in rich tomato gravy with Indian spices',
+    price: 280,
+    category: 'vegetarian',
+    image: 'https://images.pexels.com/photos/2474661/pexels-photo-2474661.jpeg'
+  },
+  {
+    name: 'Vegetable Biryani',
+    description: 'Fragrant basmati rice with mixed vegetables and aromatic spices',
+    price: 250,
+    category: 'vegetarian',
+    image: 'https://images.pexels.com/photos/7437489/pexels-photo-7437489.jpeg'
+  },
+  {
+    name: 'Mushroom Risotto',
+    description: 'Creamy Italian rice with wild mushrooms and parmesan',
+    price: 320,
+    category: 'vegetarian',
+    image: 'https://images.pexels.com/photos/5638268/pexels-photo-5638268.jpeg'
+  },
+  {
+    name: 'Mediterranean Platter',
+    description: 'Hummus, falafel, tabbouleh, and pita bread',
+    price: 350,
+    category: 'vegetarian',
+    image: 'https://images.pexels.com/photos/1618898/pexels-photo-1618898.jpeg'
+  },
+  {
+    name: 'Spinach and Ricotta Ravioli',
+    description: 'Handmade pasta filled with spinach and ricotta cheese',
+    price: 290,
+    category: 'vegetarian',
+    image: 'https://images.pexels.com/photos/1437267/pexels-photo-1437267.jpeg'
+  },
+
+
+  {
+    name: 'Grilled Salmon',
+    description: 'Fresh Atlantic salmon with lemon herb butter',
+    price: 450,
+    category: 'non-vegetarian',
+    image: 'https://images.pexels.com/photos/3763847/pexels-photo-3763847.jpeg'
+  },
+  {
+    name: 'Butter Chicken',
+    description: 'Classic Indian curry with tender chicken in creamy tomato sauce',
+    price: 320,
+    category: 'non-vegetarian',
+    image: 'https://images.pexels.com/photos/7625056/pexels-photo-7625056.jpeg'
+  },
+  {
+    name: 'BBQ Ribs',
+    description: 'Slow-cooked pork ribs with house-made barbecue sauce',
+    price: 420,
+    category: 'non-vegetarian',
+    image: 'https://images.pexels.com/photos/533325/pexels-photo-533325.jpeg'
+  },
+  {
+    name: 'Seafood Paella',
+    description: 'Spanish rice with mixed seafood and saffron',
+    price: 480,
+    category: 'non-vegetarian',
+    image: 'https://images.pexels.com/photos/12087895/pexels-photo-12087895.jpeg'
+  },
+  {
+    name: 'Lamb Chops',
+    description: 'Grilled lamb chops with mint sauce and roasted vegetables',
+    price: 520,
+    category: 'non-vegetarian',
+    image: 'https://images.pexels.com/photos/6941026/pexels-photo-6941026.jpeg'
+  },
+  {
+    name: 'Chicken Wings',
+    description: 'Crispy wings tossed in choice of sauce: BBQ, Buffalo, or Honey Garlic',
+    price: 280,
+    category: 'non-vegetarian',
+    image: 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg'
+  },
+
+
+  {
+    name: 'Classic Mojito',
+    description: 'Rum, fresh mint, lime juice, and soda water',
+    price: 180,
+    category: 'drinks',
+    image: 'https://images.pexels.com/photos/4021983/pexels-photo-4021983.jpeg'
+  },
+  {
+    name: 'Margarita',
+    description: 'Tequila, triple sec, and fresh lime juice',
+    price: 200,
+    category: 'drinks',
+    image: 'https://images.pexels.com/photos/3407782/pexels-photo-3407782.jpeg'
+  },
+  {
+    name: 'Red Wine Sangria',
+    description: 'Red wine with fresh fruits and brandy',
+    price: 220,
+    category: 'drinks',
+    image: 'https://images.pexels.com/photos/1283219/pexels-photo-1283219.jpeg'
+  },
+  {
+    name: 'Old Fashioned',
+    description: 'Bourbon, bitters, and sugar with orange twist',
+    price: 240,
+    category: 'drinks',
+    image: 'https://images.pexels.com/photos/602750/pexels-photo-602750.jpeg'
+  },
+  {
+    name: 'Espresso Martini',
+    description: 'Vodka, coffee liqueur, and fresh espresso',
+    price: 220,
+    category: 'drinks',
+    image: 'https://images.pexels.com/photos/2531186/pexels-photo-2531186.jpeg'
+  },
+  {
+    name: 'Craft Beer',
+    description: 'Selection of local and imported craft beers',
+    price: 160,
+    category: 'drinks',
+    image: 'https://images.pexels.com/photos/1552630/pexels-photo-1552630.jpeg'
+  },
+
+  {
+    name: 'Fresh Orange Juice',
+    description: 'Freshly squeezed orange juice',
+    price: 120,
+    category: 'soft-drinks',
+    image: 'https://images.pexels.com/photos/1337825/pexels-photo-1337825.jpeg'
+  },
+  {
+    name: 'Mango Lassi',
+    description: 'Traditional Indian yogurt drink with mango',
+    price: 140,
+    category: 'soft-drinks',
+    image: 'https://images.pexels.com/photos/9797029/pexels-photo-9797029.jpeg'
+  },
+  {
+    name: 'Virgin Mojito',
+    description: 'Mint, lime, sugar, and soda water',
+    price: 150,
+    category: 'soft-drinks',
+    image: 'https://images.pexels.com/photos/2615616/pexels-photo-2615616.jpeg'
+  },
+  {
+    name: 'Iced Tea',
+    description: 'House-made iced tea with lemon',
+    price: 110,
+    category: 'soft-drinks',
+    image: 'https://images.pexels.com/photos/792613/pexels-photo-792613.jpeg'
+  },
+  {
+    name: 'Smoothie Bowl',
+    description: 'Mixed berry smoothie with granola and fresh fruits',
+    price: 180,
+    category: 'soft-drinks',
+    image: 'https://images.pexels.com/photos/1099680/pexels-photo-1099680.jpeg'
+  },
+  {
+    name: 'Coconut Water',
+    description: 'Fresh coconut water served in coconut',
+    price: 130,
+    category: 'soft-drinks',
+    image: 'https://images.pexels.com/photos/1028428/pexels-photo-1028428.jpeg'
+  },
+
+  
+  {
+    name: 'Loaded Nachos',
+    description: 'Tortilla chips with cheese, jalapeños, and guacamole',
+    price: 220,
+    category: 'snacks',
+    image: 'https://images.pexels.com/photos/1108775/pexels-photo-1108775.jpeg'
+  },
+  {
+    name: 'Chicken Popcorn',
+    description: 'Crispy bite-sized chicken pieces with dipping sauce',
+    price: 180,
+    category: 'snacks',
+    image: 'https://images.pexels.com/photos/60616/fried-chicken-chicken-fried-crunchy-60616.jpeg'
+  },
+  {
+    name: 'Cheese Platter',
+    description: 'Selection of cheeses with crackers and fruits',
+    price: 350,
+    category: 'snacks',
+    image: 'https://images.pexels.com/photos/1927377/pexels-photo-1927377.jpeg'
+  },
+  {
+    name: 'Spring Rolls',
+    description: 'Vegetable spring rolls with sweet chili sauce',
+    price: 160,
+    category: 'snacks',
+    image: 'https://images.pexels.com/photos/955137/pexels-photo-955137.jpeg'
+  },
+  {
+    name: 'Bruschetta',
+    description: 'Toasted bread with tomatoes, garlic, and basil',
+    price: 180,
+    category: 'snacks',
+    image: 'https://images.pexels.com/photos/2228566/pexels-photo-2228566.jpeg'
+  },
+  {
+    name: 'Onion Rings',
+    description: 'Crispy battered onion rings with aioli',
+    price: 150,
+    category: 'snacks',
+    image: 'https://images.pexels.com/photos/1583884/pexels-photo-1583884.jpeg'
+  }
+];
