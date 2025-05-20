@@ -13,21 +13,42 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Update table status
-router.patch("/:id", async (req, res) => {
+// Create a new table
+router.post("/createTable/", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { status } = req.body;
+    const { number } = req.body;
+    const table = new Table({
+      number,
+    });
+    await table.save();
+    res.status(201).json(table);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
 
-    const table = await Table.findByIdAndUpdate(id, { status }, { new: true });
+// get table details by id
+router.get("/bytable/:tableNumber", async (req, res) => {
+  const { tableNumber } = req.params;
+  try {
+    const findTableID = await Table.findOne({ number: tableNumber });
 
-    if (!table) {
+    if (!findTableID) {
       return res.status(404).json({ message: "Table not found" });
     }
 
-    res.json(table);
+    const table = await Table.findById(findTableID).populate("currentOrder");
+
+    if (!table) {
+      return res.status(404).json({ message: "Table Data not found" });
+    }
+
+    res.json({
+      ststus: "success",
+      table,
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ status: "fail", message: error.message });
   }
 });
 

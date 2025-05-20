@@ -20,13 +20,13 @@ const orderItemSchema = new mongoose.Schema({
 const orderSchema = new mongoose.Schema(
   {
     tableNumber: {
-      type: Number,
+      type: String,
       required: true,
     },
     items: [orderItemSchema],
     status: {
       type: String,
-      enum: ["active", "completed"],
+      enum: ["active", "completed", "cancelled"],
       default: "active",
     },
     total: {

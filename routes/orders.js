@@ -16,53 +16,57 @@ router.get("/", async (req, res) => {
 
 // Create a new order
 router.post("/", async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const { tableNumber, items } = req.body;
+    const { tableNumber, items, total } = req.body;
 
-    // Calculate total
-    const total = items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-
-    // Create order
-    const order = new Order({
+    // check if order already exists for the table then update it
+    const existingOrder = await Order.findOne({
       tableNumber,
-      items,
-      total,
       status: "active",
     });
+    if (existingOrder) {
+      existingOrder.items = items;
+      existingOrder.total = total;
+      await existingOrder.save();
+      return res.status(200).json({
+        message: "Order updated successfully",
+        order: existingOrder,
+      });
+    } else {
+      // Create order
+      const order = new Order({
+        tableNumber,
+        items,
+        total,
+        status: "active",
+      });
 
-    await order.save({ session });
+      await order.save();
+    }
 
     // Update table status
     await Table.findOneAndUpdate(
       { number: tableNumber },
-      { status: "occupied", currentOrder: order._id },
-      { session }
+      { status: "occupied", currentOrder: order._id }
     );
 
-    await session.commitTransaction();
-    res.status(201).json(order);
+    // res.status(201).json(order);
+    res.status(201).json({
+      message: "Order created successfully",
+      order,
+    });
   } catch (error) {
-    await session.abortTransaction();
     res.status(400).json({ message: error.message });
-  } finally {
-    session.endSession();
   }
 });
 
 // Complete an order
-router.patch("/:id/complete", async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
+router.patch("/:id/complete/:paymentMethod", async (req, res) => {
   try {
     const { id } = req.params;
-    const { paymentMethod } = req.body;
+    const { paymentMethod } = req.params;
+    console.log("Payment method:", paymentMethod);
+    console.log("Order ID:", id);
 
     const order = await Order.findById(id);
     if (!order) {
@@ -71,22 +75,18 @@ router.patch("/:id/complete", async (req, res) => {
 
     order.status = "completed";
     order.paymentMethod = paymentMethod;
-    await order.save({ session });
+    await order.save();
 
     // Free up the table
     await Table.findOneAndUpdate(
       { number: order.tableNumber },
-      { status: "available", currentOrder: null },
-      { session }
+      { status: "available", currentOrder: null }
     );
 
-    await session.commitTransaction();
-    res.json(order);
+    // await session.commitTransaction();
+    res.json({ message: "Order completed successfully", order });
   } catch (error) {
-    await session.abortTransaction();
     res.status(400).json({ message: error.message });
-  } finally {
-    session.endSession();
   }
 });
 
