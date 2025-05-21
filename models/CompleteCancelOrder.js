@@ -2,8 +2,7 @@ const mongoose = require("mongoose");
 
 const orderItemSchema = new mongoose.Schema({
   menuItem: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "MenuItem",
+    type: String,
     required: true,
   },
   quantity: {
@@ -24,9 +23,21 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
     items: [orderItemSchema],
+    status: {
+      type: String,
+      enum: ["completed", "cancelled"],
+      default: "active",
+    },
     total: {
       type: Number,
       required: true,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["cash", "online"],
+      required: function () {
+        return this.status === "completed";
+      },
     },
   },
   {
@@ -34,4 +45,4 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Order", orderSchema);
+module.exports = mongoose.model("finalOrders", orderSchema);
