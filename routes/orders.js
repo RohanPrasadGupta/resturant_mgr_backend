@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const orders = await Order.find().populate("items.menuItem");
-    res.json(orders);
+    res.json({ status: "success", orders });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -17,11 +17,19 @@ router.get("/", async (req, res) => {
 // Create a new order
 router.post("/", async (req, res) => {
   try {
-    const { tableNumber, items, total } = req.body;
+    const { tableNumber, items, total, tableId } = req.body;
+
+    console.log(
+      "tableNumber, items, total, tableId",
+      tableNumber,
+      items,
+      total,
+      tableId
+    );
 
     // check if order already exists for the table then update it
     const existingOrder = await Order.findOne({
-      tableNumber,
+      tableId,
       status: "active",
     });
     if (existingOrder) {
@@ -34,21 +42,15 @@ router.post("/", async (req, res) => {
       });
     } else {
       // Create order
-      const order = new Order({
+      const order = await new Order({
         tableNumber,
+        tableId,
         items,
         total,
-        status: "active",
       });
 
       await order.save();
     }
-
-    // Update table status
-    await Table.findOneAndUpdate(
-      { number: tableNumber },
-      { status: "occupied", currentOrder: order._id }
-    );
 
     // res.status(201).json(order);
     res.status(201).json({

@@ -28,16 +28,10 @@ router.post("/createTable/", async (req, res) => {
 });
 
 // get table details by id
-router.get("/bytable/:tableNumber", async (req, res) => {
-  const { tableNumber } = req.params;
+router.get("/bytable/:tableID", async (req, res) => {
+  const { tableID } = req.params;
   try {
-    const findTableID = await Table.findOne({ number: tableNumber });
-
-    if (!findTableID) {
-      return res.status(404).json({ message: "Table not found" });
-    }
-
-    const table = await Table.findById(findTableID).populate("currentOrder");
+    const table = await Table.findById(tableID).populate("currentOrder");
 
     if (!table) {
       return res.status(404).json({ message: "Table Data not found" });

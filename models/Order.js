@@ -23,6 +23,10 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    tableId: {
+      type: String,
+      required: true,
+    },
     items: [orderItemSchema],
     total: {
       type: Number,
@@ -30,7 +34,7 @@ const orderSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: new Date.now(),
+    timestamps: true,
   }
 );
 

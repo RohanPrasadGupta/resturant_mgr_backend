@@ -16,7 +16,7 @@ const orderItemSchema = new mongoose.Schema({
   },
 });
 
-const orderSchema = new mongoose.Schema(
+const finalOrdersSchema = new mongoose.Schema(
   {
     tableNumber: {
       type: String,
@@ -25,8 +25,8 @@ const orderSchema = new mongoose.Schema(
     items: [orderItemSchema],
     status: {
       type: String,
-      enum: ["completed", "cancelled"],
-      default: "active",
+      enum: ["completed", "cancelled", "incomplete"],
+      default: "incomplete",
     },
     total: {
       type: Number,
@@ -41,8 +41,8 @@ const orderSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: new Date.now(),
+    timestamps: true,
   }
 );
 
-module.exports = mongoose.model("finalOrders", orderSchema);
+module.exports = mongoose.model("finalOrders", finalOrdersSchema);
