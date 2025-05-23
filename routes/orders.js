@@ -8,85 +8,92 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const orders = await Order.find().populate("items.menuItem");
-    res.json(orders);
+    res.json({ status: "success", orders });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Create a new order
-router.post("/", async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
+// get order by tableId
+router.get("/:tableId", async (req, res) => {
   try {
-    const { tableNumber, items } = req.body;
-
-    // Calculate total
-    const total = items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-
-    // Create order
-    const order = new Order({
-      tableNumber,
-      items,
-      total,
-      status: "active",
-    });
-
-    await order.save({ session });
-
-    // Update table status
-    await Table.findOneAndUpdate(
-      { number: tableNumber },
-      { status: "occupied", currentOrder: order._id },
-      { session }
-    );
-
-    await session.commitTransaction();
-    res.status(201).json(order);
+    const { tableId } = req.params;
+    const order = await Order.findOne({ tableId }).populate("items.menuItem");
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    res.json({ status: "success", order });
   } catch (error) {
-    await session.abortTransaction();
-    res.status(400).json({ message: error.message });
-  } finally {
-    session.endSession();
+    res.status(500).json({ message: error.message });
   }
 });
 
-// Complete an order
-router.patch("/:id/complete", async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
+// Create a new order or update an existing one
+router.post("/", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { paymentMethod } = req.body;
+    const { tableNumber, items, tableId } = req.body;
 
-    const order = await Order.findById(id);
+    // Check if order already exists
+    let order = await Order.findOne({ tableId, tableNumber });
+
+    if (order) {
+      order.items = items;
+      order.calculateTotal();
+      await order.save();
+
+      return res.status(200).json({
+        message: "Order updated successfully",
+        order,
+      });
+    } else {
+      // Create new order
+      order = new Order({
+        tableNumber,
+        tableId,
+        items,
+        total: 0,
+      });
+
+      order.calculateTotal();
+      await order.save();
+
+      return res.status(201).json({
+        message: "Order created successfully",
+        order,
+      });
+    }
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Delete Item From Order
+router.delete("/deleteItem/:tableId/:itemId", async (req, res) => {
+  try {
+    const { tableId, itemId } = req.params;
+
+    const order = await Order.findOne({
+      tableId: tableId,
+    });
+
     if (!order) {
-      throw new Error("Order not found");
+      return res.status(404).json({ message: "Order not found" });
     }
 
-    order.status = "completed";
-    order.paymentMethod = paymentMethod;
-    await order.save({ session });
-
-    // Free up the table
-    await Table.findOneAndUpdate(
-      { number: order.tableNumber },
-      { status: "available", currentOrder: null },
-      { session }
+    const itemIndex = order.items.findIndex(
+      (item) => item._id.toString() === itemId
     );
+    if (itemIndex === -1) {
+      return res.status(404).json({ message: "Item not found in order" });
+    }
 
-    await session.commitTransaction();
-    res.json(order);
+    order.items.splice(itemIndex, 1);
+    order.calculateTotal();
+    await order.save();
+
+    res.json({ message: "Item removed from order successfully", order });
   } catch (error) {
-    await session.abortTransaction();
     res.status(400).json({ message: error.message });
-  } finally {
-    session.endSession();
   }
 });
 
