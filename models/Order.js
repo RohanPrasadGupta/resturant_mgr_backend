@@ -38,4 +38,10 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
+orderSchema.methods.calculateTotal = function () {
+  this.total = this.items.reduce((acc, item) => {
+    return acc + item.quantity * item.price;
+  }, 0);
+};
+
 module.exports = mongoose.model("Order", orderSchema);
