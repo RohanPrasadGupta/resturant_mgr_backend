@@ -28,6 +28,10 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
     items: [orderItemSchema],
+    orderBy: {
+      type: String,
+      required: true,
+    },
     total: {
       type: Number,
       required: true,

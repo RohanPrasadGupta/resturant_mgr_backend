@@ -5,9 +5,22 @@ const FinalOrder = require("../models/CompleteCancelOrder");
 
 exports.createOrder = async (req, res) => {
   try {
-    const { tableNumber, tableId, items } = req.body;
+    const { tableNumber, tableId, items, orderBy } = req.body;
 
-    const order = new Order({ tableNumber, tableId, items });
+    // Check if table is occupied and has an existing order then update it
+    const existingTable = await Table.findById(tableId);
+    if (existingTable.status === "occupied" && existingTable.currentOrder) {
+      const existingOrder = await Order.findById(existingTable.currentOrder);
+      existingOrder.items.push(...items);
+      existingOrder.calculateTotal();
+      await existingOrder.save();
+      return res.status(200).json({
+        message: "Order updated successfully",
+        existingOrder,
+      });
+    }
+
+    const order = new Order({ tableNumber, tableId, items, orderBy });
     order.calculateTotal();
     await order.save();
 
@@ -16,7 +29,7 @@ exports.createOrder = async (req, res) => {
       currentOrder: order._id,
     });
 
-    res.status(201).json(order);
+    res.status(201).json({ message: "Order created successfully", order });
   } catch (err) {
     res
       .status(500)
@@ -33,6 +46,7 @@ exports.addItemToOrder = async (req, res) => {
     order.items.push({ menuItem: menuItemId, quantity, price: menuItem.price });
     order.calculateTotal();
     await order.save();
+    s;
 
     res.status(200).json(order);
   } catch (err) {
