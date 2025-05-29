@@ -7,11 +7,23 @@ exports.createOrder = async (req, res) => {
   try {
     const { tableNumber, tableId, items, orderBy } = req.body;
 
-    // Check if table is occupied and has an existing order then update it
+    console.log("Received items:", tableNumber, tableId, items, orderBy);
     const existingTable = await Table.findById(tableId);
     if (existingTable.status === "occupied" && existingTable.currentOrder) {
       const existingOrder = await Order.findById(existingTable.currentOrder);
-      existingOrder.items.push(...items);
+
+      for (const newItem of items) {
+        const existingItemIndex = existingOrder.items.findIndex(
+          (item) => item.menuItem.toString() === newItem.menuItem.toString()
+        );
+
+        if (existingItemIndex !== -1) {
+          existingOrder.items[existingItemIndex].quantity += newItem.quantity;
+        } else {
+          existingOrder.items.push(newItem);
+        }
+      }
+
       existingOrder.calculateTotal();
       await existingOrder.save();
       return res.status(200).json({
