@@ -7,23 +7,55 @@ exports.createOrder = async (req, res) => {
   try {
     const { tableNumber, tableId, items, orderBy } = req.body;
 
-    // Check if table is occupied and has an existing order then update it
+    // First check if the table exists
     const existingTable = await Table.findById(tableId);
-    if (existingTable.status === "occupied" && existingTable.currentOrder) {
-      const existingOrder = await Order.findById(existingTable.currentOrder);
-      existingOrder.items.push(...items);
-      existingOrder.calculateTotal();
-      await existingOrder.save();
-      return res.status(200).json({
-        message: "Order updated successfully",
-        existingOrder,
-      });
+    if (!existingTable) {
+      return res.status(404).json({ message: "Table not found" });
     }
 
+    // Validate menu items
+    for (const item of items) {
+      const menuItem = await MenuItem.findById(item.menuItem);
+      if (!menuItem) {
+        return res.status(404).json({
+          message: `Menu item with ID ${item.menuItem} not found`,
+        });
+      }
+    }
+
+    // Check if table is occupied and has an existing order
+    if (existingTable.status === "occupied" && existingTable.currentOrder) {
+      const existingOrder = await Order.findById(existingTable.currentOrder);
+
+      if (existingOrder) {
+        for (const newItem of items) {
+          const existingItemIndex = existingOrder.items.findIndex(
+            (item) => item.menuItem.toString() === newItem.menuItem.toString()
+          );
+
+          if (existingItemIndex !== -1) {
+            existingOrder.items[existingItemIndex].quantity += newItem.quantity;
+          } else {
+            existingOrder.items.push(newItem);
+          }
+        }
+
+        existingOrder.calculateTotal();
+        await existingOrder.save();
+
+        return res.status(200).json({
+          message: "Order updated successfully",
+          order: existingOrder,
+        });
+      }
+    }
+
+    // Create new order if table is not occupied or doesn't have an order
     const order = new Order({ tableNumber, tableId, items, orderBy });
     order.calculateTotal();
     await order.save();
 
+    // Update the table status
     await Table.findByIdAndUpdate(tableId, {
       status: "occupied",
       currentOrder: order._id,
@@ -31,6 +63,7 @@ exports.createOrder = async (req, res) => {
 
     res.status(201).json({ message: "Order created successfully", order });
   } catch (err) {
+    console.error("Order creation error:", err);
     res
       .status(500)
       .json({ message: "Error creating order", error: err.message });
