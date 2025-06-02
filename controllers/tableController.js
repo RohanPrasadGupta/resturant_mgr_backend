@@ -35,12 +35,10 @@ exports.getAllTables = async (req, res) => {
   }
 };
 
-// Create a new table
 exports.createTable = async (req, res) => {
   try {
     const { number, status } = req.body;
 
-    // Check if table number already exists
     const existingTable = await Table.findOne({ number });
     if (existingTable) {
       return res.status(400).json({ message: "Table number already exists" });
@@ -56,7 +54,6 @@ exports.createTable = async (req, res) => {
   }
 };
 
-// Delete a table by ID
 exports.deleteTable = async (req, res) => {
   try {
     const deleted = await Table.findByIdAndDelete(req.params.id);

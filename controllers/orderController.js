@@ -11,7 +11,7 @@ exports.createOrder = async (req, res) => {
       return res.status(404).json({ message: "Table not found" });
     }
 
-    // Validate menu items
+    const validatedItems = [];
     for (const item of items) {
       const menuItem = await MenuItem.findById(item.menuItem);
       if (!menuItem) {
@@ -19,35 +19,34 @@ exports.createOrder = async (req, res) => {
           message: `Menu item with ID ${item.menuItem} not found`,
         });
       }
+
+      validatedItems.push({
+        menuItem: item.menuItem,
+        quantity: item.quantity,
+        price: menuItem.price * item.quantity,
+        orderServed: false,
+      });
     }
 
-    // Check if table is occupied and has an existing order
     if (existingTable.status === "occupied" && existingTable.currentOrder) {
       const existingOrder = await Order.findById(existingTable.currentOrder);
 
       if (existingOrder) {
-        for (const newItem of items) {
-          const existingItemIndex = existingOrder.items.findIndex(
-            (item) => item.menuItem.toString() === newItem.menuItem.toString()
+        for (const newItem of validatedItems) {
+          const unservedItemIndex = existingOrder.items.findIndex(
+            (item) =>
+              item.menuItem.toString() === newItem.menuItem.toString() &&
+              !item.orderServed
           );
 
-          if (existingItemIndex !== -1) {
-            // Only update if the existing item is not served
-            if (!existingOrder.items[existingItemIndex].orderServed) {
-              existingOrder.items[existingItemIndex].quantity +=
-                newItem.quantity;
-            } else {
-              // Add as new item if existing item is served
-              existingOrder.items.push({
-                ...newItem,
-                orderServed: false,
-              });
-            }
+          if (unservedItemIndex !== -1) {
+            // Update quantity of existing unserved item
+            const menuItem = await MenuItem.findById(newItem.menuItem);
+            existingOrder.items[unservedItemIndex].quantity += newItem.quantity;
+            existingOrder.items[unservedItemIndex].price =
+              menuItem.price * existingOrder.items[unservedItemIndex].quantity;
           } else {
-            existingOrder.items.push({
-              ...newItem,
-              orderServed: false,
-            });
+            existingOrder.items.push(newItem);
           }
         }
 
@@ -61,12 +60,15 @@ exports.createOrder = async (req, res) => {
       }
     }
 
-    // Create new order if table is not occupied or doesn't have an order
-    const order = new Order({ tableNumber, tableId, items, orderBy });
+    const order = new Order({
+      tableNumber,
+      tableId,
+      items: validatedItems,
+      orderBy,
+    });
     order.calculateTotal();
     await order.save();
 
-    // Update the table status
     await Table.findByIdAndUpdate(tableId, {
       status: "occupied",
       currentOrder: order._id,
@@ -81,7 +83,6 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// update order quantity
 exports.updateOrderQuantity = async (req, res) => {
   try {
     const { menuItemId, quantity } = req.body;
@@ -96,7 +97,6 @@ exports.updateOrderQuantity = async (req, res) => {
     );
 
     if (itemIndex !== -1) {
-      // Check if this specific item is already served
       if (order.items[itemIndex].orderServed) {
         return res.status(400).json({
           message: "Cannot modify this item - it has already been served",
@@ -131,7 +131,6 @@ exports.removeItemFromOrder = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Find the item to check if it's served
     const itemToRemove = order.items.find((item) => {
       return item.menuItem._id.toString() === menuItemId;
     });
@@ -140,27 +139,22 @@ exports.removeItemFromOrder = async (req, res) => {
       return res.status(404).json({ message: "Menu item not found in order." });
     }
 
-    // Check if this specific item is already served
     if (itemToRemove.orderServed) {
       return res.status(400).json({
         message: "Cannot remove this item - it has already been served",
       });
     }
 
-    // Filter out the specific menu item
     order.items = order.items.filter((item) => {
       return item.menuItem._id.toString() !== menuItemId;
     });
 
-    // Check if no items are left in the order
     if (order.items.length === 0) {
-      // Update table status to available and remove current order
       await Table.findByIdAndUpdate(order.tableId, {
         status: "available",
         currentOrder: null,
       });
 
-      // Delete the order since it has no items
       await Order.findByIdAndDelete(req.params.orderId);
 
       return res.status(200).json({
@@ -169,7 +163,6 @@ exports.removeItemFromOrder = async (req, res) => {
       });
     }
 
-    // If items still exist, recalculate total and save
     order.calculateTotal();
     await order.save();
 
@@ -184,7 +177,6 @@ exports.removeItemFromOrder = async (req, res) => {
   }
 };
 
-// Mark specific item as served
 exports.markItemServed = async (req, res) => {
   try {
     const { menuItemId } = req.body;
@@ -224,7 +216,6 @@ exports.markItemServed = async (req, res) => {
   }
 };
 
-// Mark all unserved items as served
 exports.markAllItemsServed = async (req, res) => {
   try {
     const order = await Order.findById(req.params.orderId).populate(
@@ -262,7 +253,6 @@ exports.markAllItemsServed = async (req, res) => {
   }
 };
 
-// Delete entire order (keep this for deleting complete orders)
 exports.deleteOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.orderId);
@@ -271,7 +261,6 @@ exports.deleteOrder = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Check if any item is already served
     const hasServedItems = order.items.some((item) => item.orderServed);
     if (hasServedItems) {
       return res.status(400).json({
@@ -279,7 +268,6 @@ exports.deleteOrder = async (req, res) => {
       });
     }
 
-    // Update table status when deleting entire order
     await Table.findByIdAndUpdate(order.tableId, {
       status: "available",
       currentOrder: null,
@@ -343,7 +331,6 @@ exports.completeOrder = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Check if all items are served
     const unservedItems = order.items.filter((item) => !item.orderServed);
 
     if (unservedItems.length > 0) {

@@ -5,7 +5,6 @@ const FinalOrders = require("../models/CompleteCancelOrder");
 
 const router = express.Router();
 
-// Get all confirmORder
 router.get("/", async (req, res) => {
   try {
     const orders = await FinalOrders.find().populate("items.menuItem");

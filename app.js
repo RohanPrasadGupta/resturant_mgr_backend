@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-// const completeOrderRoutes = require("./routes/confirmOrder.js");
 const orderRoutes = require("./routes/orderRoutes.js");
 const tableRoutes = require("./routes/tableRoutes.js");
 const menuItemRoutes = require("./routes/menuItemRoutes");
@@ -28,8 +27,6 @@ app.use("/api", orderRoutes);
 app.use("/api", tableRoutes);
 app.use("/api", menuItemRoutes);
 app.use("/api/users", userRoutes);
-
-// app.use("/api/confirmOrder", completeOrderRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");
