@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/UserInfo");
 const jwtSecret = process.env.JWT_SECRET;
 
-// Register a new user
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -40,7 +39,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Login user
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -69,7 +67,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Get all users
 router.get("/", async (req, res) => {
   try {
     const users = await User.find({}).select("-password");
@@ -79,7 +76,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get user by ID
 router.get("/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
@@ -94,7 +90,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update user
 router.put("/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -122,7 +117,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete user
 router.delete("/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);

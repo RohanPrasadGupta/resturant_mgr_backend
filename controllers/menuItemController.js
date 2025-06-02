@@ -1,6 +1,5 @@
 const MenuItem = require("../models/MenuItems");
 
-// GET all menu items
 exports.getAllMenuItems = async (req, res) => {
   try {
     const menuItems = await MenuItem.find();
@@ -12,7 +11,6 @@ exports.getAllMenuItems = async (req, res) => {
   }
 };
 
-// GET menu item by ID
 exports.getMenuItemById = async (req, res) => {
   try {
     const menuItem = await MenuItem.findById(req.params.id);
@@ -26,7 +24,6 @@ exports.getMenuItemById = async (req, res) => {
   }
 };
 
-// POST create a new menu item
 exports.createMenuItem = async (req, res) => {
   try {
     const newItem = new MenuItem(req.body);
@@ -39,7 +36,6 @@ exports.createMenuItem = async (req, res) => {
   }
 };
 
-// PUT update a menu item
 exports.updateMenuItem = async (req, res) => {
   try {
     const updatedItem = await MenuItem.findByIdAndUpdate(
@@ -57,7 +53,6 @@ exports.updateMenuItem = async (req, res) => {
   }
 };
 
-// DELETE a menu item
 exports.deleteMenuItem = async (req, res) => {
   try {
     const deletedItem = await MenuItem.findByIdAndDelete(req.params.id);
