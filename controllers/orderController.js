@@ -7,7 +7,6 @@ exports.createOrder = async (req, res) => {
   try {
     const { tableNumber, tableId, items, orderBy } = req.body;
 
-    console.log("Received items:", tableNumber, tableId, items, orderBy);
     const existingTable = await Table.findById(tableId);
     if (existingTable.status === "occupied" && existingTable.currentOrder) {
       const existingOrder = await Order.findById(existingTable.currentOrder);
@@ -49,40 +48,104 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-exports.addItemToOrder = async (req, res) => {
+// update order quantity
+exports.updateOrderQuantity = async (req, res) => {
   try {
     const { menuItemId, quantity } = req.body;
-    const menuItem = await MenuItem.findById(menuItemId);
-
     const order = await Order.findById(req.params.orderId);
-    order.items.push({ menuItem: menuItemId, quantity, price: menuItem.price });
-    order.calculateTotal();
-    await order.save();
-    s;
 
-    res.status(200).json(order);
+    const itemIndex = order.items.findIndex(
+      (item) => item.menuItem.toString() === menuItemId
+    );
+
+    if (itemIndex !== -1) {
+      order.items[itemIndex].quantity = quantity;
+      order.items[itemIndex].price =
+        (await MenuItem.findById(menuItemId)).price * quantity;
+      order.calculateTotal();
+      await order.save();
+
+      res.status(200).json(order);
+    } else {
+      res.status(404).json({ message: "Menu item not found in order." });
+    }
   } catch (err) {
     res
       .status(500)
-      .json({ message: "Error adding item to order", error: err.message });
+      .json({ message: "Error updating order quantity", error: err.message });
   }
 };
 
 exports.removeItemFromOrder = async (req, res) => {
   try {
     const { menuItemId } = req.body;
-    const order = await Order.findById(req.params.orderId);
-    order.items = order.items.filter(
-      (item) => item.menuItem.toString() !== menuItemId
+    const order = await Order.findById(req.params.orderId).populate(
+      "items.menuItem"
     );
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Filter out the specific menu item using the populated _id
+    order.items = order.items.filter((item) => {
+      return item.menuItem._id.toString() !== menuItemId;
+    });
+
+    // Check if no items are left in the order
+    if (order.items.length === 0) {
+      // Update table status to available and remove current order
+      await Table.findByIdAndUpdate(order.tableId, {
+        status: "available",
+        currentOrder: null,
+      });
+
+      // Delete the order since it has no items
+      await Order.findByIdAndDelete(req.params.orderId);
+
+      return res.status(200).json({
+        message: "Last item removed, order deleted and table made available",
+        tableStatus: "available",
+      });
+    }
+
+    // If items still exist, recalculate total and save
     order.calculateTotal();
     await order.save();
 
-    res.status(200).json(order);
+    res.status(200).json({
+      message: "Item removed successfully",
+      order,
+    });
   } catch (err) {
     res
       .status(500)
       .json({ message: "Error removing item", error: err.message });
+  }
+};
+
+// Delete entire order (keep this for deleting complete orders)
+exports.deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Update table status when deleting entire order
+    await Table.findByIdAndUpdate(order.tableId, {
+      status: "available",
+      currentOrder: null,
+    });
+
+    await Order.findByIdAndDelete(req.params.orderId);
+
+    res.status(200).json({ message: "Entire order deleted successfully." });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error deleting order", error: err.message });
   }
 };
 
@@ -163,13 +226,28 @@ exports.cancelOrder = async (req, res) => {
   }
 };
 
-exports.deleteOrder = async (req, res) => {
+exports.getOrderByTableNumber = async (req, res) => {
   try {
-    await Order.findByIdAndDelete(req.params.orderId);
-    res.status(200).json({ message: "Order deleted." });
+    const { tableNumber } = req.params;
+
+    const order = await Order.findOne({
+      tableNumber: tableNumber,
+    }).populate("items.menuItem");
+
+    if (!order) {
+      return res
+        .status(404)
+        .json({ message: "No active order found for this table number" });
+    }
+
+    res.status(200).json({
+      message: "Order found successfully",
+      order,
+    });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error deleting order", error: err.message });
+    res.status(500).json({
+      message: "Error fetching order by table number",
+      error: err.message,
+    });
   }
 };
