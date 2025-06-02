@@ -15,6 +15,10 @@ const orderItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  orderServed: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const orderSchema = new mongoose.Schema(

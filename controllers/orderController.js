@@ -32,9 +32,22 @@ exports.createOrder = async (req, res) => {
           );
 
           if (existingItemIndex !== -1) {
-            existingOrder.items[existingItemIndex].quantity += newItem.quantity;
+            // Only update if the existing item is not served
+            if (!existingOrder.items[existingItemIndex].orderServed) {
+              existingOrder.items[existingItemIndex].quantity +=
+                newItem.quantity;
+            } else {
+              // Add as new item if existing item is served
+              existingOrder.items.push({
+                ...newItem,
+                orderServed: false,
+              });
+            }
           } else {
-            existingOrder.items.push(newItem);
+            existingOrder.items.push({
+              ...newItem,
+              orderServed: false,
+            });
           }
         }
 
@@ -74,11 +87,22 @@ exports.updateOrderQuantity = async (req, res) => {
     const { menuItemId, quantity } = req.body;
     const order = await Order.findById(req.params.orderId);
 
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
     const itemIndex = order.items.findIndex(
       (item) => item.menuItem.toString() === menuItemId
     );
 
     if (itemIndex !== -1) {
+      // Check if this specific item is already served
+      if (order.items[itemIndex].orderServed) {
+        return res.status(400).json({
+          message: "Cannot modify this item - it has already been served",
+        });
+      }
+
       order.items[itemIndex].quantity = quantity;
       order.items[itemIndex].price =
         (await MenuItem.findById(menuItemId)).price * quantity;
@@ -107,7 +131,23 @@ exports.removeItemFromOrder = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Filter out the specific menu item using the populated _id
+    // Find the item to check if it's served
+    const itemToRemove = order.items.find((item) => {
+      return item.menuItem._id.toString() === menuItemId;
+    });
+
+    if (!itemToRemove) {
+      return res.status(404).json({ message: "Menu item not found in order." });
+    }
+
+    // Check if this specific item is already served
+    if (itemToRemove.orderServed) {
+      return res.status(400).json({
+        message: "Cannot remove this item - it has already been served",
+      });
+    }
+
+    // Filter out the specific menu item
     order.items = order.items.filter((item) => {
       return item.menuItem._id.toString() !== menuItemId;
     });
@@ -144,6 +184,84 @@ exports.removeItemFromOrder = async (req, res) => {
   }
 };
 
+// Mark specific item as served
+exports.markItemServed = async (req, res) => {
+  try {
+    const { menuItemId } = req.body;
+    const order = await Order.findById(req.params.orderId).populate(
+      "items.menuItem"
+    );
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const itemIndex = order.items.findIndex(
+      (item) => item.menuItem._id.toString() === menuItemId
+    );
+
+    if (itemIndex === -1) {
+      return res.status(404).json({ message: "Menu item not found in order" });
+    }
+
+    if (order.items[itemIndex].orderServed) {
+      return res.status(400).json({
+        message: "Item has already been marked as served",
+      });
+    }
+
+    order.items[itemIndex].orderServed = true;
+    await order.save();
+
+    res.status(200).json({
+      message: "Item marked as served successfully",
+      order,
+    });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error marking item as served", error: err.message });
+  }
+};
+
+// Mark all unserved items as served
+exports.markAllItemsServed = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId).populate(
+      "items.menuItem"
+    );
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    let servedCount = 0;
+    order.items.forEach((item) => {
+      if (!item.orderServed) {
+        item.orderServed = true;
+        servedCount++;
+      }
+    });
+
+    if (servedCount === 0) {
+      return res.status(400).json({
+        message: "All items are already marked as served",
+      });
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      message: `${servedCount} items marked as served successfully`,
+      order,
+    });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error marking items as served", error: err.message });
+  }
+};
+
 // Delete entire order (keep this for deleting complete orders)
 exports.deleteOrder = async (req, res) => {
   try {
@@ -151,6 +269,14 @@ exports.deleteOrder = async (req, res) => {
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Check if any item is already served
+    const hasServedItems = order.items.some((item) => item.orderServed);
+    if (hasServedItems) {
+      return res.status(400).json({
+        message: "Cannot delete order - some items have already been served",
+      });
     }
 
     // Update table status when deleting entire order
@@ -180,72 +306,6 @@ exports.getAllOrders = async (req, res) => {
   }
 };
 
-exports.completeOrder = async (req, res) => {
-  try {
-    const { paymentMethod } = req.body;
-    const order = await Order.findById(req.params.orderId).populate(
-      "items.menuItem"
-    );
-
-    const finalOrder = new FinalOrder({
-      tableNumber: order.tableNumber,
-      items: order.items.map((item) => ({
-        menuItem: item.menuItem.name,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-      total: order.total,
-      status: "completed",
-      paymentMethod,
-    });
-
-    await finalOrder.save();
-    await Table.findByIdAndUpdate(order.tableId, {
-      status: "available",
-      currentOrder: null,
-    });
-    await order.remove();
-
-    res.status(200).json({ message: "Order completed and archived." });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error completing order", error: err.message });
-  }
-};
-
-exports.cancelOrder = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.orderId).populate(
-      "items.menuItem"
-    );
-
-    const finalOrder = new FinalOrder({
-      tableNumber: order.tableNumber,
-      items: order.items.map((item) => ({
-        menuItem: item.menuItem.name,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-      total: order.total,
-      status: "cancelled",
-    });
-
-    await finalOrder.save();
-    await Table.findByIdAndUpdate(order.tableId, {
-      status: "available",
-      currentOrder: null,
-    });
-    await order.remove();
-
-    res.status(200).json({ message: "Order cancelled and archived." });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error cancelling order", error: err.message });
-  }
-};
-
 exports.getOrderByTableNumber = async (req, res) => {
   try {
     const { tableNumber } = req.params;
@@ -269,5 +329,95 @@ exports.getOrderByTableNumber = async (req, res) => {
       message: "Error fetching order by table number",
       error: err.message,
     });
+  }
+};
+
+exports.completeOrder = async (req, res) => {
+  try {
+    const { paymentMethod } = req.body;
+    const order = await Order.findById(req.params.orderId).populate(
+      "items.menuItem"
+    );
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Check if all items are served
+    const unservedItems = order.items.filter((item) => !item.orderServed);
+
+    if (unservedItems.length > 0) {
+      return res.status(400).json({
+        message: "Cannot complete order - some items have not been served yet",
+        unservedItems: unservedItems.map((item) => ({
+          menuItemId: item.menuItem._id,
+          menuItemName: item.menuItem.name,
+          quantity: item.quantity,
+        })),
+      });
+    }
+
+    const finalOrder = new FinalOrder({
+      tableNumber: order.tableNumber,
+      items: order.items.map((item) => ({
+        menuItem: item.menuItem.name,
+        quantity: item.quantity,
+        price: item.price,
+        orderServed: item.orderServed,
+      })),
+      total: order.total,
+      status: "completed",
+      paymentMethod,
+    });
+
+    await finalOrder.save();
+    await Table.findByIdAndUpdate(order.tableId, {
+      status: "available",
+      currentOrder: null,
+    });
+    await order.deleteOne();
+
+    res.status(200).json({ message: "Order completed and archived." });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error completing order", error: err.message });
+  }
+};
+
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId).populate(
+      "items.menuItem"
+    );
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const finalOrder = new FinalOrder({
+      tableNumber: order.tableNumber,
+      items: order.items.map((item) => ({
+        menuItem: item.menuItem.name,
+        quantity: item.quantity,
+        price: item.price,
+        orderServed: item.orderServed,
+      })),
+      total: order.total,
+      status: "cancelled",
+    });
+
+    await finalOrder.save();
+    await Table.findByIdAndUpdate(order.tableId, {
+      status: "available",
+      currentOrder: null,
+    });
+    await order.deleteOne();
+
+    res.status(200).json({ message: "Order cancelled and archived." });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error cancelling order", error: err.message });
   }
 };
