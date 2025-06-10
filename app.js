@@ -11,7 +11,7 @@ app.use(express.json());
 const allowedOrigins = [
   "http://localhost:3002",
   "http://localhost:3000",
-  "https://rpg-ecommerce.netlify.app",
+  "https://mgr-frontend.netlify.app",
   "https://resturant-mgr-backend.onrender.com",
 ];
 
