@@ -1,10 +1,9 @@
-const express = require("express");
-const router = express.Router();
 const jwt = require("jsonwebtoken");
 const User = require("../models/UserInfo");
 const jwtSecret = process.env.JWT_SECRET;
 
-router.post("/register", async (req, res) => {
+// Register a new user
+exports.register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
     const userExists = await User.findOne({ email });
@@ -37,9 +36,10 @@ router.post("/register", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+};
 
-router.post("/login", async (req, res) => {
+// Login user
+exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -65,18 +65,20 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+};
 
-router.get("/", async (req, res) => {
+// Get all users
+exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find({}).select("-password");
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+};
 
-router.get("/:id", async (req, res) => {
+// Get user by ID
+exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
 
@@ -88,9 +90,10 @@ router.get("/:id", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+};
 
-router.put("/:id", async (req, res) => {
+// Update user
+exports.updateUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
 
@@ -104,6 +107,7 @@ router.put("/:id", async (req, res) => {
     if (email) user.email = email;
     if (role) user.role = role;
     if (password) user.password = password;
+
     const updatedUser = await user.save();
 
     res.json({
@@ -115,9 +119,10 @@ router.put("/:id", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+};
 
-router.delete("/:id", async (req, res) => {
+// Delete user
+exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
 
@@ -130,6 +135,4 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-module.exports = router;
+};
