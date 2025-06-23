@@ -98,3 +98,56 @@ exports.getTotalAmountOfFinalOrders = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// get all sold items and number of time it was ordered and calculate the amount sold for that order
+exports.getSoldItems = async (req, res) => {
+  try {
+    const soldItems = await FinalOrder.aggregate([
+      { $match: { status: "completed" } },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.menuItem",
+          totalQuantity: { $sum: "$items.quantity" },
+          totalAmount: { $sum: "$items.price" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          menuItemName: "$_id",
+          totalQuantity: 1,
+          totalAmount: 1,
+          averagePrice: {
+            $divide: ["$totalAmount", "$totalQuantity"],
+          },
+        },
+      },
+
+      { $sort: { totalQuantity: -1 } },
+    ]);
+
+    // Calculate overall statistics
+    const totalStats = soldItems.reduce(
+      (acc, item) => {
+        acc.totalQuantitySold += item.totalQuantity;
+        acc.totalRevenue += item.totalAmount;
+        return acc;
+      },
+      { totalQuantitySold: 0, totalRevenue: 0 }
+    );
+
+    res.status(200).json({
+      message: "success",
+      soldItems,
+      totalStats: {
+        totalItemsSold: totalStats.totalQuantitySold,
+        totalRevenue: totalStats.totalRevenue,
+        uniqueItems: soldItems.length,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching sold items:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
