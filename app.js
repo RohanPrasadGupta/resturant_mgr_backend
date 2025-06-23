@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json());
 
 const allowedOrigins = [
-  "http://localhost:3002",
+  "http://localhost:3001",
   "http://localhost:3000",
   "https://mgr-frontend.netlify.app",
   "https://resturant-mgr-backend.onrender.com",
