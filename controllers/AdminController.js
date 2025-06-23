@@ -103,14 +103,13 @@ exports.getTotalAmountOfFinalOrders = async (req, res) => {
 exports.getSoldItems = async (req, res) => {
   try {
     const soldItems = await FinalOrder.aggregate([
-      // Only include completed orders
       { $match: { status: "completed" } },
       { $unwind: "$items" },
       {
         $group: {
-          _id: "$items.menuItem", // This is the menu item name (String)
+          _id: "$items.menuItem",
           totalQuantity: { $sum: "$items.quantity" },
-          totalAmount: { $sum: "$items.price" }, // items.price is already total price (quantity * unit price)
+          totalAmount: { $sum: "$items.price" },
         },
       },
       {
@@ -124,7 +123,7 @@ exports.getSoldItems = async (req, res) => {
           },
         },
       },
-      // Sort by total quantity sold (most popular first)
+
       { $sort: { totalQuantity: -1 } },
     ]);
 

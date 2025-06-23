@@ -45,6 +45,14 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ email });
 
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({ message: "User is inactive" });
+    }
+
     if (user && (await user.matchPassword(password))) {
       const token = jwt.sign(
         { id: user._id },
@@ -132,6 +140,31 @@ exports.deleteUser = async (req, res) => {
     } else {
       res.status(404).json({ message: "User not found" });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Make the user inactive/active when toggling status
+exports.makeUserInactive = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.isActive = !user.isActive;
+    const updatedUser = await user.save();
+
+    res.json({
+      message: "User status updated",
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      isActive: updatedUser.isActive,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
