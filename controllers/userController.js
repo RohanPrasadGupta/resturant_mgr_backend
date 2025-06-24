@@ -19,7 +19,7 @@ exports.register = async (req, res) => {
     });
 
     if (user) {
-      const token = jwt.sign({ id: user._id }, jwtSecret || "yoursecretkey", {
+      const token = jwt.sign({ id: user._id }, jwtSecret, {
         expiresIn: "30d",
       });
 
@@ -54,11 +54,16 @@ exports.login = async (req, res) => {
     }
 
     if (user && (await user.matchPassword(password))) {
-      const token = jwt.sign(
-        { id: user._id },
-        process.env.JWT_SECRET || "yoursecretkey",
-        { expiresIn: "30d" }
-      );
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "30d",
+      });
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+      });
 
       res.json({
         _id: user._id,
