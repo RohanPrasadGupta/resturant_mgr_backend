@@ -14,6 +14,7 @@ exports.authCheck = async (req, res, next) => {
     const decoded = jwt.decode(token);
 
     const user = await User.findById(decoded.id);
+    console.log("User found:", user);
     if (!user) {
       return res.status(401).json({
         message: "Invalid token. User not found.",
