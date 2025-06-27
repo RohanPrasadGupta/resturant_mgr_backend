@@ -5,7 +5,7 @@ const jwtSecret = process.env.JWT_SECRET;
 // Middleware to check if cookie token is valid before allowing other functions to run
 exports.authCheck = async (req, res, next) => {
   try {
-    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+    const token = req.cookies["mgr-token"];
 
     if (!token) {
       return res.json({ error: "No token found" });
@@ -20,6 +20,8 @@ exports.authCheck = async (req, res, next) => {
         authenticated: false,
       });
     }
+
+    console.log("User found:", user);
     if (
       (user.role === "admin" || user.role === "staff") &&
       user.isActive === false
