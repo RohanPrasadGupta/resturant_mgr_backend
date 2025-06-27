@@ -21,7 +21,6 @@ exports.authCheck = async (req, res, next) => {
       });
     }
 
-    console.log("User found:", user);
     if (
       (user.role === "admin" || user.role === "staff") &&
       user.isActive === false
