@@ -23,6 +23,7 @@ const corsOptions = {
   methods: "GET, POST, PUT, DELETE, PATCH, HEAD",
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
+  maxAge: 86400000,
 };
 
 app.use(cors(corsOptions));
