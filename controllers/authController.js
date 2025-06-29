@@ -4,7 +4,6 @@ const jwtSecret = process.env.JWT_SECRET;
 
 // Middleware to check if cookie token is valid before allowing other functions to run
 exports.authCheck = async (req, res, next) => {
-  console.log("cookies in request:", req.cookies);
   try {
     const token = req.cookies["mgr-token"];
 
