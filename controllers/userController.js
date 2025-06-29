@@ -64,8 +64,8 @@ exports.login = async (req, res) => {
 
     res.cookie("mgr-token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "production" ? "none" : "lax",
+      secure: true,
+      sameSite: "None",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
