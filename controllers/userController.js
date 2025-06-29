@@ -87,6 +87,16 @@ exports.login = async (req, res) => {
   }
 };
 
+// Logout User
+exports.logout = (req, res) => {
+  res.cookie("mgr-token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
+  });
+  res.status(200).json({ message: "User logged out successfully" });
+};
+
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
