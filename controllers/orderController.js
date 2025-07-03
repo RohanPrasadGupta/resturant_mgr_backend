@@ -73,6 +73,7 @@ exports.createOrder = async (req, res) => {
       status: "occupied",
       currentOrder: order._id,
     });
+    global.io.emit("new-order", order);
 
     res.status(201).json({ message: "Order created successfully", order });
   } catch (err) {
