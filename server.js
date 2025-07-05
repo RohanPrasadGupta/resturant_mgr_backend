@@ -35,19 +35,19 @@ const io = new Server(server, {
 });
 
 // Listen for socket connections
-io.on("connection", (socket) => {
-  console.log("🔔 A user connected:", socket.id);
+// io.on("connection", (socket) => {
+//   console.log("🔔 A user connected:", socket.id);
 
-  // Optional: listen for event registration (admin/staff)
-  socket.on("register-admin", () => {
-    console.log(`🧑‍💼 Admin registered: ${socket.id}`);
-  });
+//   // Optional: listen for event registration (admin/staff)
+//   socket.on("register-admin", () => {
+//     console.log(`🧑‍💼 Admin registered: ${socket.id}`);
+//   });
 
-  // Disconnect
-  socket.on("disconnect", () => {
-    console.log("❌ User disconnected:", socket.id);
-  });
-});
+//   // Disconnect
+//   socket.on("disconnect", () => {
+//     console.log("❌ User disconnected:", socket.id);
+//   });
+// });
 
 // Attach to global so routes can use io
 global.io = io;

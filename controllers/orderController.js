@@ -2,6 +2,7 @@ const Order = require("../models/Order");
 const Table = require("../models/Table");
 const MenuItem = require("../models/MenuItems");
 const FinalOrder = require("../models/CompleteCancelOrder");
+const { Socket } = require("socket.io");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -73,7 +74,7 @@ exports.createOrder = async (req, res) => {
       status: "occupied",
       currentOrder: order._id,
     });
-    global.io.emit("new-order", order);
+    global.io.emit("new-order", { order: order, tableNumber: tableNumber });
 
     res.status(201).json({ message: "Order created successfully", order });
   } catch (err) {
@@ -366,6 +367,14 @@ exports.completeOrder = async (req, res) => {
     await order.deleteOne();
 
     res.status(200).json({ message: "Order completed and archived." });
+
+    global.io.emit("order-completed", {
+      tableNumber: order.tableNumber,
+      orderId: order._id,
+      paymentMethod,
+      total: order.total,
+      time: new Date(),
+    });
   } catch (err) {
     res
       .status(500)
