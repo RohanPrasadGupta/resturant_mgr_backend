@@ -19,7 +19,7 @@ exports.register = async (req, res) => {
     });
 
     if (user) {
-      const token = jwt.sign({ id: user._id }, jwtSecret || "yoursecretkey", {
+      const token = jwt.sign({ id: user._id }, jwtSecret, {
         expiresIn: "30d",
       });
 
@@ -43,7 +43,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
       return res.status(401).json({ message: "User not found" });
@@ -53,26 +53,48 @@ exports.login = async (req, res) => {
       return res.status(403).json({ message: "User is inactive" });
     }
 
-    if (user && (await user.matchPassword(password))) {
-      const token = jwt.sign(
-        { id: user._id },
-        process.env.JWT_SECRET || "yoursecretkey",
-        { expiresIn: "30d" }
-      );
-
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token,
-      });
-    } else {
-      res.status(401).json({ message: "Invalid email or password" });
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid email or password" });
     }
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        name: user.name,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "30d" }
+    );
+
+    res.cookie("mgr-token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+// Logout User
+exports.logout = (req, res) => {
+  res.cookie("mgr-token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
+  });
+  res.status(200).json({ message: "User logged out successfully" });
 };
 
 // Get all users

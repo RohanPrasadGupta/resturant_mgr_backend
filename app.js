@@ -1,5 +1,7 @@
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
+
 const orderRoutes = require("./routes/orderRoutes.js");
 const tableRoutes = require("./routes/tableRoutes.js");
 const menuItemRoutes = require("./routes/menuItemRoutes");
@@ -8,9 +10,10 @@ const adminRoutes = require("./routes/adminRoutes.js");
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 const allowedOrigins = [
-  "http://localhost:3002",
+  "http://localhost:3001",
   "http://localhost:3000",
   "https://mgr-frontend.netlify.app",
   "https://resturant-mgr-backend.onrender.com",
@@ -20,7 +23,8 @@ const corsOptions = {
   origin: allowedOrigins,
   methods: "GET, POST, PUT, DELETE, PATCH, HEAD",
   credentials: true,
-  allowedHeaders: "Content-Type, Authorization",
+  allowedHeaders: ["Content-Type", "Authorization"],
+  maxAge: 86400000,
 };
 
 app.use(cors(corsOptions));

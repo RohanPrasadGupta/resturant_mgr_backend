@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const orderController = require("../controllers/orderController");
+const { authCheck } = require("../controllers/authController");
 
 router.post("/order", orderController.createOrder);
 router.put(
@@ -13,7 +14,7 @@ router.put(
   "/order/:orderId/mark-all-served",
   orderController.markAllItemsServed
 );
-router.get("/orders", orderController.getAllOrders);
+router.get("/orders", authCheck, orderController.getAllOrders);
 router.get(
   "/order/table-number/:tableNumber",
   orderController.getOrderByTableNumber
