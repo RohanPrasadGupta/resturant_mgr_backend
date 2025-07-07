@@ -7,5 +7,9 @@ router.get("/menu-items/:id", menuItemController.getMenuItemById);
 router.post("/menu-items", menuItemController.createMenuItem);
 router.put("/menu-items/:id", menuItemController.updateMenuItem);
 router.delete("/menu-items/:id", menuItemController.deleteMenuItem);
+router.patch(
+  "/menu-items/:id/toggle-availability",
+  menuItemController.toggleMenuItemAvailability
+);
 
 module.exports = router;

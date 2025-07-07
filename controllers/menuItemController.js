@@ -65,3 +65,26 @@ exports.deleteMenuItem = async (req, res) => {
       .json({ message: "Error deleting menu item", error: err.message });
   }
 };
+
+exports.toggleMenuItemAvailability = async (req, res) => {
+  try {
+    const menuItem = await MenuItem.findById(req.params.id);
+    if (!menuItem)
+      return res.status(404).json({ message: "Menu item not found" });
+
+    menuItem.available = !menuItem.available;
+    const updatedItem = await menuItem.save();
+
+    res.status(200).json({
+      message: `Menu item ${
+        updatedItem.available ? "enabled" : "disabled"
+      } successfully`,
+      menuItem: updatedItem,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error toggling menu item availability",
+      error: err.message,
+    });
+  }
+};
