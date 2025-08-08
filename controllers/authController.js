@@ -38,3 +38,35 @@ exports.authCheck = async (req, res, next) => {
     });
   }
 };
+exports.authCheckForAdmin = async (req, res, next) => {
+  try {
+    const token = req.cookies["mgr-token"];
+
+    if (!token) {
+      return res.json({ error: "No token found", message: req.cookies });
+    }
+
+    const decoded = jwt.decode(token);
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid token. User not found.",
+        authenticated: false,
+      });
+    }
+
+    if (user.role === "admin" && user.isActive === false) {
+      return res.status(403).json({
+        message: "User is inactive.",
+        authenticated: false,
+      });
+    }
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      message: "Something went wrong.",
+      authenticated: false,
+    });
+  }
+};
