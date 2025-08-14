@@ -3,10 +3,6 @@ const FinalOrder = require("../models/CompleteCancelOrder");
 // get the final orders from new to old
 exports.getAllFinalOrders = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
     const finalOrders = await FinalOrder.find()
       .sort({ createdAt: -1 })
       .populate("items.menuItem");
@@ -14,6 +10,22 @@ exports.getAllFinalOrders = async (req, res) => {
     res.status(200).json({ message: "success", finalOrders });
   } catch (error) {
     console.error("Error fetching final orders:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getFinalOrderByID = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const finalOrder = await FinalOrder.findById(id).populate("items.menuItem");
+
+    if (!finalOrder) {
+      return res.status(404).json({ message: "Final order not found" });
+    }
+
+    res.status(200).json({ message: "success", finalOrder });
+  } catch (error) {
+    console.error("Error fetching final order by ID:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
