@@ -360,7 +360,8 @@ exports.completeOrder = async (req, res) => {
       paymentMethod,
     });
 
-    await finalOrder.save();
+    const savedFinalOrder = await finalOrder.save();
+
     await Table.findByIdAndUpdate(order.tableId, {
       status: "available",
       currentOrder: null,
@@ -370,17 +371,17 @@ exports.completeOrder = async (req, res) => {
     res.status(200).json({ message: "Order completed and archived." });
 
     const notification = new Notification({
-      orderId: order._id,
-      message: `Order ${order._id} has been completed.`,
-      orderValue: order.total,
+      orderId: savedFinalOrder._id,
+      message: `Order ${savedFinalOrder._id} has been completed.`,
+      orderValue: savedFinalOrder.total,
     });
     await notification.save();
 
     global.io.emit("order-completed", {
-      tableNumber: order.tableNumber,
-      orderId: order._id,
+      tableNumber: savedFinalOrder.tableNumber,
+      orderId: savedFinalOrder._id,
       paymentMethod,
-      total: order.total,
+      total: savedFinalOrder.total,
       time: new Date(),
     });
   } catch (err) {

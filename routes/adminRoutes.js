@@ -8,6 +8,13 @@ router.get(
   authCheckForAdmin,
   adminController.getAllFinalOrders
 );
+
+router.get(
+  "/confirm-order/:id",
+  authCheckForAdmin,
+  adminController.getFinalOrderByID
+);
+
 router.get(
   "/total-amount-confirm-orders",
   authCheckForAdmin,
