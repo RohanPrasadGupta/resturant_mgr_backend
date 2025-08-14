@@ -2,6 +2,7 @@ const Order = require("../models/Order");
 const Table = require("../models/Table");
 const MenuItem = require("../models/MenuItems");
 const FinalOrder = require("../models/CompleteCancelOrder");
+const Notification = require("../models/OrderNotifications");
 const { Socket } = require("socket.io");
 
 exports.createOrder = async (req, res) => {
@@ -367,6 +368,13 @@ exports.completeOrder = async (req, res) => {
     await order.deleteOne();
 
     res.status(200).json({ message: "Order completed and archived." });
+
+    const notification = new Notification({
+      orderId: order._id,
+      message: `Order ${order._id} has been completed.`,
+      orderValue: order.total,
+    });
+    await notification.save();
 
     global.io.emit("order-completed", {
       tableNumber: order.tableNumber,
