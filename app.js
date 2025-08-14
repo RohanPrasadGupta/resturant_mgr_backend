@@ -7,6 +7,7 @@ const tableRoutes = require("./routes/tableRoutes.js");
 const menuItemRoutes = require("./routes/menuItemRoutes");
 const userRoutes = require("./routes/userRoutes.js");
 const adminRoutes = require("./routes/adminRoutes.js");
+const notificationRoutes = require("./routes/notificationsRoutes.js");
 
 const app = express();
 app.use(express.json());
@@ -33,6 +34,7 @@ app.use("/api", tableRoutes);
 app.use("/api", menuItemRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");
